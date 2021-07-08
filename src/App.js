@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
 import './App.css';
+import SignUpForm from './components/SignUpForm';
 import TodoContainer from './components/TodoContainer'
 import TodoForm from './components/TodoForm'
 import { patchTodo, postTodo, deleteTodo } from './helpers';
@@ -8,7 +9,9 @@ const todosUrl = "http://localhost:3000/todos/"
 class App extends Component {
   
   state = {
-    todos: []
+    todos: [],
+    user: {},
+    alerts: [],
   }
 
   componentDidMount(){
@@ -45,10 +48,35 @@ class App extends Component {
     deleteTodo(id)
   }
 
+  signUp = (user) => {
+    fetch("http://localhost:3000/users", {
+        method: "POST",
+        headers: {
+          "content-Type": "application/json"
+        },
+        body: JSON.stringify({ user })
+    })
+    .then(response => response.json())
+    .then(response => {
+      if(response.errors){
+        this.setState({alerts: response.errors})
+      }
+      else{
+        localStorage.setItem('token', response.token)
+        this.setState({ 
+          user: response.user,
+          alerts: ["User successfully created!"]
+        })
+        
+      }
+    })
+  }
+
   render(){
     return (
       <div className="App">
         <h1> Todo App </h1>
+        <SignUpForm signUp={this.signUp} alerts={this.state.alerts}/>
         <TodoForm submitAction={this.addTodo}/>
         <TodoContainer updateTodo={this.updateTodo} deleteTodo={this.deleteTodo} todos={this.state.todos} />
       </div>
